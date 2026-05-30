@@ -1,0 +1,678 @@
+# Kiw-kiw
+Kiwkiw__
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Smart Task Prioritizer | Matriks Eisenhower untuk Inna</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            padding: 2rem 1.5rem;
+            color: #0f172a;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header Profil */
+        .profile-bar {
+            background: white;
+            border-radius: 28px;
+            padding: 1.2rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+        }
+        .user-greeting h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e3c2c, #2b5e3b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .user-greeting p {
+            color: #475569;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+        .role-badge {
+            background: #eef2ff;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1e3c2c;
+        }
+
+        /* dua kolom utama: kiri (form + daftar tugas) dan kanan (matriks & kalender) */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 1.8rem;
+        }
+
+        /* Panel kiri */
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 1.5rem 1.8rem;
+            margin-bottom: 1.8rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .card h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-left: 5px solid #2b5e3b;
+            padding-left: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #334155;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            background: #fefefe;
+            transition: 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2b5e3b;
+            box-shadow: 0 0 0 3px rgba(43,94,59,0.2);
+        }
+        .priority-buttons {
+            display: flex;
+            gap: 0.8rem;
+            margin: 0.8rem 0 0.5rem;
+        }
+        .btn-prio {
+            flex: 1;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            padding: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+        .btn-prio.active {
+            background: #2b5e3b;
+            color: white;
+            border-color: #2b5e3b;
+        }
+        .btn-primary {
+            background: #1e3c2c;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 40px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 0.8rem;
+            font-size: 1rem;
+        }
+        .task-list {
+            max-height: 380px;
+            overflow-y: auto;
+        }
+        .task-item {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 0.9rem;
+            margin-bottom: 0.8rem;
+            border-left: 6px solid;
+            transition: 0.1s;
+        }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+        }
+        .task-desc {
+            font-size: 0.85rem;
+            color: #334155;
+            margin: 6px 0;
+        }
+        .task-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            font-size: 0.7rem;
+            color: #475569;
+            margin-top: 8px;
+        }
+        .delete-task {
+            background: none;
+            border: none;
+            color: #dc2626;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+
+        /* Matriks Eisenhower - Grid */
+        .eisenhower-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.8rem;
+        }
+        .quadrant {
+            background: white;
+            border-radius: 24px;
+            padding: 1rem;
+            min-height: 220px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.1s;
+        }
+        .quadrant h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            margin-bottom: 0.8rem;
+        }
+        .quadrant ul {
+            list-style: none;
+            max-height: 170px;
+            overflow-y: auto;
+        }
+        .quadrant li {
+            font-size: 0.8rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px dashed #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .badge-deadline {
+            font-size: 0.65rem;
+            background: #e2e8f0;
+            border-radius: 20px;
+            padding: 0.1rem 0.5rem;
+        }
+        .q1 { border-top: 4px solid #dc2626; }
+        .q2 { border-top: 4px solid #f59e0b; }
+        .q3 { border-top: 4px solid #3b82f6; }
+        .q4 { border-top: 4px solid #10b981; }
+
+        /* Kalender sederhana */
+        .calendar-card {
+            background: white;
+            border-radius: 28px;
+            padding: 1rem 1rem;
+            border: 1px solid #e2e8f0;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        .month-year {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.7rem;
+            margin-bottom: 0.5rem;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .cal-day {
+            background: #f8fafc;
+            border-radius: 30px;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.1s;
+            position: relative;
+        }
+        .cal-day.has-deadline {
+            background: #ffedd5;
+            font-weight: bold;
+            color: #b45309;
+        }
+        .cal-day.today {
+            border: 2px solid #2b5e3b;
+            background: #e6f4ea;
+        }
+        .deadline-list {
+            margin-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 0.8rem;
+        }
+        .deadline-item {
+            font-size: 0.75rem;
+            background: #f1f5f9;
+            border-radius: 16px;
+            padding: 0.3rem 0.6rem;
+            margin-bottom: 0.3rem;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            body { padding: 1rem; }
+        }
+        button { cursor: pointer; }
+        .empty-message { color: #94a3b8; font-style: italic; font-size: 0.75rem; text-align: center; padding: 1rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="profile-bar">
+        <div class="user-greeting">
+            <h1>🌿 Smart Task Prioritizer | Matriks Eisenhower</h1>
+            <p>Inna Alqaidah · Arsitektur Lanskap IPB · Ketua Biro Riskominfo BEM Faperta · PJK Ospek Mahasiswa</p>
+        </div>
+        <div class="role-badge">🎯 10+ tahun consultant productivity: Urgensi & Kepentingan</div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Kolom Kiri: Tambah Tugas & Daftar Tugas Aktif -->
+        <div>
+            <div class="card">
+                <h2>➕ Tambah Tugas Prioritas</h2>
+                <div class="form-group">
+                    <label>Nama Tugas</label>
+                    <input type="text" id="taskName" placeholder="Ex: Submit proposal riset lanskap, Rapat koordinasi BEM, dll">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi singkat (opsional)</label>
+                    <textarea rows="2" id="taskDesc" placeholder="Detail kecil atau catatan"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>📅 Deadline</label>
+                    <input type="date" id="taskDeadline">
+                </div>
+                <div class="form-group">
+                    <label>⚡ Skala Prioritas (Eisenhower)</label>
+                    <div class="priority-buttons" id="prioritySelector">
+                        <div data-prio="1" class="btn-prio">🔴 QUADRAN 1<br><span style="font-size:10px">Urgent & Penting</span></div>
+                        <div data-prio="2" class="btn-prio">🟠 QUADRAN 2<br><span style="font-size:10px">Tidak Urgent & Penting</span></div>
+                        <div data-prio="3" class="btn-prio">🔵 QUADRAN 3<br><span style="font-size:10px">Urgent & Tidak Penting</span></div>
+                        <div data-prio="4" class="btn-prio">🟢 QUADRAN 4<br><span style="font-size:10px">Tidak Urgent & Tidak Penting</span></div>
+                    </div>
+                    <input type="hidden" id="selectedPriority" value="1">
+                </div>
+                <button class="btn-primary" id="addTaskBtn">+ Tambahkan ke Matriks & Kalender</button>
+            </div>
+
+            <div class="card">
+                <h2>📋 Daftar Semua Tugas Aktif</h2>
+                <div id="taskListContainer" class="task-list">
+                    <!-- dynamic task list -->
+                    <div class="empty-message">Belum ada tugas. Tambahkan tugas prioritas Anda.</div>
+                </div>
+                <button id="resetExampleBtn" style="background:#eef2ff; color:#1e3c2c; margin-top: 1rem; border: none; padding: 0.5rem; border-radius: 40px; width:100%;">🧹 Reset / Hapus Semua Tugas</button>
+            </div>
+        </div>
+
+        <!-- Kolom Kanan: Matriks Eisenhower + Kalender -->
+        <div>
+            <div class="card" style="padding-bottom: 1rem;">
+                <h2>📌 Matriks Eisenhower (Urgensi vs Kepentingan)</h2>
+                <div class="eisenhower-grid">
+                    <div class="quadrant q1">
+                        <h3 style="color:#b91c1c;">🔥 Q1: Lakukan Segera<br><span style="font-size:10px">Urgent & Penting</span></h3>
+                        <ul id="q1List"></ul>
+                    </div>
+                    <div class="quadrant q2">
+                        <h3 style="color:#b45309;">📅 Q2: Jadwalkan<br><span style="font-size:10px">Tidak Urgent & Penting</span></h3>
+                        <ul id="q2List"></ul>
+                    </div>
+                    <div class="quadrant q3">
+                        <h3 style="color:#2563eb;">⏰ Q3: Delegasikan<br><span style="font-size:10px">Urgent & Tidak Penting</span></h3>
+                        <ul id="q3List"></ul>
+                    </div>
+                    <div class="quadrant q4">
+                        <h3 style="color:#0d9488;">🗑️ Q4: Eliminasi<br><span style="font-size:10px">Tidak Urgent & Tidak Penting</span></h3>
+                        <ul id="q4List"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calendar-card">
+                <div class="calendar-header">
+                    <button id="prevMonthBtn" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">◀</button>
+                    <span class="month-year" id="monthYearDisplay">Maret 2025</span>
+                    <button id="nextMonthBtn" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">▶</button>
+                </div>
+                <div class="calendar-days">
+                    <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span>
+                </div>
+                <div id="calendarGrid" class="calendar-grid"></div>
+                <div class="deadline-list" id="deadlineDetails">
+                    <strong>📅 Deadline terdekat / pilih tanggal:</strong>
+                    <div id="selectedDateInfo" style="font-size:0.7rem; margin:5px 0;">Klik tanggal di kalender untuk lihat tugas</div>
+                    <div id="deadlineTasksList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Data storage
+    let tasks = []; // each task { id, name, desc, deadline, priority (1-4) }
+    
+    // Helper: load from localStorage
+    function loadTasks() {
+        const stored = localStorage.getItem("eisenhower_tasks_inna");
+        if(stored) {
+            tasks = JSON.parse(stored);
+        } else {
+            // contoh data awal untuk Inna (menggambarkan role)
+            tasks = [
+                { id: Date.now()+1, name: "📢 Rapat Koordinasi BEM (Riskominfo)", desc: "Menyusun strategi publikasi", deadline: getFutureDate(2), priority: 1 },
+                { id: Date.now()+2, name: "📝 Tugas Besar Studio Lanskap", desc: "Konsep taman kota", deadline: getFutureDate(7), priority: 2 },
+                { id: Date.now()+3, name: "🎓 Persiapan Ospek Mahasiswa (PJK)", desc: "Konsolidasi panitia", deadline: getFutureDate(4), priority: 1 },
+                { id: Date.now()+4, name: "📧 Balas email kurang urgent", desc: "Newsletter internal", deadline: getFutureDate(10), priority: 3 },
+                { id: Date.now()+5, name: "🔄 Update medsos BEM", desc: "tidak urgent", deadline: getFutureDate(12), priority: 4 },
+            ];
+        }
+        renderAll();
+    }
+    function getFutureDate(daysLater) {
+        let d = new Date();
+        d.setDate(d.getDate() + daysLater);
+        return d.toISOString().split('T')[0];
+    }
+    function saveTasks() {
+        localStorage.setItem("eisenhower_tasks_inna", JSON.stringify(tasks));
+    }
+
+    // Tambah tugas
+    function addTask() {
+        let name = document.getElementById("taskName").value.trim();
+        if(!name) {
+            alert("Harap isi nama tugas!");
+            return;
+        }
+        let desc = document.getElementById("taskDesc").value;
+        let deadline = document.getElementById("taskDeadline").value;
+        if(!deadline) {
+            alert("Pilih deadline (kalender terintegrasi)");
+            return;
+        }
+        let priority = parseInt(document.getElementById("selectedPriority").value);
+        const newTask = {
+            id: Date.now(),
+            name: name,
+            desc: desc,
+            deadline: deadline,
+            priority: priority
+        };
+        tasks.push(newTask);
+        saveTasks();
+        // reset form
+        document.getElementById("taskName").value = "";
+        document.getElementById("taskDesc").value = "";
+        document.getElementById("taskDeadline").value = "";
+        // set default priority ke q1
+        setActivePriority(1);
+        renderAll();
+    }
+    
+    function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
+        renderAll();
+    }
+    
+    // UI priority selector
+    function setActivePriority(prio) {
+        document.getElementById("selectedPriority").value = prio;
+        document.querySelectorAll(".btn-prio").forEach(btn => {
+            let val = parseInt(btn.getAttribute("data-prio"));
+            if(val === prio) btn.classList.add("active");
+            else btn.classList.remove("active");
+        });
+    }
+    
+    // render matriks dan list tugas
+    function renderQuadrants() {
+        const q1 = tasks.filter(t => t.priority === 1);
+        const q2 = tasks.filter(t => t.priority === 2);
+        const q3 = tasks.filter(t => t.priority === 3);
+        const q4 = tasks.filter(t => t.priority === 4);
+        
+        function renderList(tasksArray, elementId) {
+            const ul = document.getElementById(elementId);
+            if(!ul) return;
+            if(tasksArray.length === 0) {
+                ul.innerHTML = "<li style='color:#94a3b8;'>— tidak ada tugas —</li>";
+                return;
+            }
+            ul.innerHTML = tasksArray.map(task => `
+                <li>
+                    <span style="flex:1"><strong>${escapeHtml(task.name)}</strong> <span class="badge-deadline">📅 ${formatDate(task.deadline)}</span><br><small>${escapeHtml(task.desc.substring(0,40))}</small></span>
+                    <button class="delete-task" data-id="${task.id}" style="background:transparent;">🗑️</button>
+                </li>
+            `).join('');
+            // attach delete event
+            ul.querySelectorAll('.delete-task').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    deleteTask(id);
+                });
+            });
+        }
+        renderList(q1, "q1List");
+        renderList(q2, "q2List");
+        renderList(q3, "q3List");
+        renderList(q4, "q4List");
+    }
+    
+    function renderTaskListSidebar() {
+        const container = document.getElementById("taskListContainer");
+        if(!container) return;
+        if(tasks.length === 0) {
+            container.innerHTML = `<div class="empty-message">✨ Tidak ada tugas. Tambahkan tugas sesuai prioritasmu.</div>`;
+            return;
+        }
+        container.innerHTML = tasks.map(task => {
+            let quadName = "";
+            if(task.priority === 1) quadName = "🔴 Q1: Lakukan Segera";
+            else if(task.priority === 2) quadName = "🟠 Q2: Jadwalkan";
+            else if(task.priority === 3) quadName = "🔵 Q3: Delegasikan";
+            else quadName = "🟢 Q4: Eliminasi";
+            let borderColor = task.priority === 1 ? "#dc2626" : task.priority === 2 ? "#f59e0b" : task.priority === 3 ? "#3b82f6" : "#10b981";
+            return `
+                <div class="task-item" style="border-left-color: ${borderColor};">
+                    <div class="task-header">
+                        <span>📌 ${escapeHtml(task.name)}</span>
+                        <button class="delete-task" data-id="${task.id}" style="background:transparent; color:#dc2626;">Hapus</button>
+                    </div>
+                    <div class="task-desc">${escapeHtml(task.desc) || "—"}</div>
+                    <div class="task-meta">
+                        <span>📅 Deadline: ${formatDate(task.deadline)}</span>
+                        <span>⚡ ${quadName}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        document.querySelectorAll("#taskListContainer .delete-task").forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(btn.getAttribute('data-id'));
+                deleteTask(id);
+            });
+        });
+    }
+    
+    // Kalender Logic Global
+    let currentDate = new Date(); // tahun & bulan
+    let selectedDateStr = null;
+    
+    function formatDate(dateStr) {
+        if(!dateStr) return "Tidak ada";
+        let d = new Date(dateStr);
+        return d.toLocaleDateString('id-ID');
+    }
+    
+    function getTasksByDate(dateStr) {
+        return tasks.filter(t => t.deadline === dateStr);
+    }
+    
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const firstDayOfMonth = new Date(year, month, 1);
+        const startWeekday = firstDayOfMonth.getDay(); // 0 Minggu
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        
+        const calendarGrid = document.getElementById("calendarGrid");
+        const monthYearDisplay = document.getElementById("monthYearDisplay");
+        monthYearDisplay.innerText = `${firstDayOfMonth.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`;
+        
+        let gridHtml = "";
+        let dayCounter = 1;
+        // empty cells before first day
+        for(let i=0; i<startWeekday; i++) {
+            gridHtml += `<div class="cal-day" style="background:transparent;"></div>`;
+        }
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateObj = new Date(year, month, d);
+            const dateStr = dateObj.toISOString().split('T')[0];
+            const hasDeadline = tasks.some(t => t.deadline === dateStr);
+            let additionalClass = "";
+            if(hasDeadline) additionalClass = "has-deadline";
+            const todayStr = new Date().toISOString().split('T')[0];
+            if(dateStr === todayStr) additionalClass += " today";
+            gridHtml += `<div class="cal-day ${additionalClass}" data-date="${dateStr}">${d}</div>`;
+        }
+        calendarGrid.innerHTML = gridHtml;
+        // event listener setiap day
+        document.querySelectorAll('.cal-day[data-date]').forEach(dayDiv => {
+            dayDiv.addEventListener('click', (e) => {
+                const dateVal = dayDiv.getAttribute('data-date');
+                selectedDateStr = dateVal;
+                showDeadlineDetails(dateVal);
+                // highlight sederhana (opsional)
+                document.querySelectorAll('.cal-day').forEach(el => el.style.border = "");
+                dayDiv.style.border = "2px solid #2b5e3b";
+            });
+        });
+        if(selectedDateStr) showDeadlineDetails(selectedDateStr);
+        else if(tasks.length) showDeadlineDetails(tasks[0]?.deadline);
+    }
+    
+    function showDeadlineDetails(dateStr) {
+        const container = document.getElementById("deadlineTasksList");
+        const infoSpan = document.getElementById("selectedDateInfo");
+        if(!dateStr) {
+            infoSpan.innerText = "Klik tanggal di kalender untuk lihat tugas";
+            container.innerHTML = "<div class='empty-message'>Tidak ada tugas pada tanggal ini</div>";
+            return;
+        }
+        infoSpan.innerText = `📆 Tugas dengan deadline: ${formatDate(dateStr)}`;
+        const tasksOnDate = getTasksByDate(dateStr);
+        if(tasksOnDate.length === 0) {
+            container.innerHTML = "<div class='empty-message'>✨ Tidak ada tugas dengan deadline tanggal ini.</div>";
+        } else {
+            container.innerHTML = tasksOnDate.map(task => {
+                let priorText = task.priority === 1 ? "🔥 URGENT-PENTING" : task.priority === 2 ? "📅 PENTING" : task.priority === 3 ? "⏰ URGENT" : "🗑️ RENDAH";
+                return `<div class="deadline-item"><strong>${escapeHtml(task.name)}</strong> — ${priorText}<br><small>${escapeHtml(task.desc)}</small></div>`;
+            }).join('');
+        }
+    }
+    
+    function changeMonth(delta) {
+        currentDate.setMonth(currentDate.getMonth() + delta);
+        renderCalendar();
+    }
+    
+    // helper escape
+    function escapeHtml(str) {
+        if(!str) return "";
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+    
+    function renderAll() {
+        renderQuadrants();
+        renderTaskListSidebar();
+        renderCalendar();
+    }
+    
+    function resetAllTasks() {
+        if(confirm("Hapus semua tugas? Aksi ini tidak bisa dibatalkan.")) {
+            tasks = [];
+            saveTasks();
+            renderAll();
+        }
+    }
+    
+    // Init event & default
+    document.addEventListener("DOMContentLoaded", () => {
+        loadTasks();
+        // priority selector interactive
+        document.querySelectorAll(".btn-prio").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const prio = parseInt(btn.getAttribute("data-prio"));
+                setActivePriority(prio);
+            });
+        });
+        document.getElementById("addTaskBtn").addEventListener("click", addTask);
+        document.getElementById("resetExampleBtn").addEventListener("click", resetAllTasks);
+        document.getElementById("prevMonthBtn").addEventListener("click", () => changeMonth(-1));
+        document.getElementById("nextMonthBtn").addEventListener("click", () => changeMonth(1));
+        // set default active priority 1
+        setActivePriority(1);
+        // set initial selected date to today
+        const today = new Date().toISOString().split('T')[0];
+        selectedDateStr = today;
+        renderCalendar();
+    });
+</script>
+</body>
+</html>
